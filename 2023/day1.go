@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"sort"
 )
 
 func main() {
@@ -51,31 +52,43 @@ func part2() {
 	arr := bytes.Split(raw, []byte("\n"))
 	sum := 0
 	var nums []int
-	for _, line := range arr {
-		re := regexp.MustCompile(`one|two|three|four|five|six|seven|eight|nine|[1-9]`)
-		matches := re.FindAll(line, -1)
-		if len(matches) > 0 {
-			number := convertToDigit(matches[0])*10 + convertToDigit(matches[len(matches)-1])
-			nums = append(nums, number)
-			sum += number
-		}
-	}
-	numbersToMatch := []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
 
+	numbersToMatch := []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
 	type SearchResult struct {
 		Index int
 		Digit int
 	}
-	var res []SearchResult
+	for _, line := range arr {
+		// re := regexp.MustCompile(`one|two|three|four|five|six|seven|eight|nine|[1-9]`)
+		// matches := re.FindAll(line, -1)
+		// if len(matches) > 0 {
+		// number := convertToDigit(matches[0])*10 + convertToDigit(matches[len(matches)-1])
+		// nums = append(nums, number)
+		// sum += number
+		// }
 
-	line := []byte(`twone`)
-	for _, numToMatch := range numbersToMatch {
-		re := regexp.MustCompile(numToMatch)
-		matches := re.FindAll(line, -1)
-		res = append(res, matches...)
+		var res []SearchResult
+
+		for _, numToMatch := range numbersToMatch {
+			re := regexp.MustCompile(numToMatch)
+			matches := re.FindAllIndex(line, -1)
+			for _, m := range matches {
+				res = append(res, SearchResult{m[0], convertToDigit(line[m[0]:m[1]])})
+			}
+		}
+		sort.SliceStable(res, func(i, j int) bool {
+			return res[i].Index < res[j].Index
+		})
+		if len(res) > 0 {
+			number := res[0].Digit*10 + res[len(res)-1].Digit
+			nums = append(nums, number)
+			sum += number
+		} else {
+			fmt.Println(res)
+		}
 	}
-	// fmt.Println(sum)
-	// fmt.Println(nums)
+	fmt.Println(sum)
+	fmt.Println(nums)
 }
 
 func convertToDigit(in []byte) int {
